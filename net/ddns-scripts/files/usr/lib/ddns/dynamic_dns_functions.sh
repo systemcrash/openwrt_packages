@@ -29,7 +29,7 @@ fi
 SECTION_ID=""		# hold config's section name
 VERBOSE=0		# default mode is log to console, but easily changed with parameter
 DRY_RUN=0		# run without actually doing (sending) any changes
-MYPROG=$(basename $0)	# my program call name
+MYPROG=$(basename "$0")	# my program call name
 
 LOGFILE=""		# logfile - all files are set in dynamic_dns_updater.sh
 PIDFILE=""		# pid file
@@ -105,11 +105,11 @@ upd_privateip=$(uci -q get ddns.global.upd_privateip) || upd_privateip=0
 
 # directory to store run information to.
 ddns_rundir=$(uci -q get ddns.global.ddns_rundir) || ddns_rundir="/var/run/ddns"
-[ -d $ddns_rundir ] || mkdir -p -m755 $ddns_rundir
+[ -d "$ddns_rundir" ] || mkdir -p -m755 "$ddns_rundir"
 
 # directory to store log files
 ddns_logdir=$(uci -q get ddns.global.ddns_logdir) || ddns_logdir="/var/log/ddns"
-[ -d $ddns_logdir ] || mkdir -p -m755 $ddns_logdir
+[ -d "$ddns_logdir" ] || mkdir -p -m755 "$ddns_logdir"
 
 # number of lines to before rotate logfile
 ddns_loglines=$(uci -q get ddns.global.ddns_loglines) || ddns_loglines=250
@@ -192,7 +192,7 @@ start_daemon_for_all_ddns_sections()
 	load_all_service_sections __SECTIONS
 	for __SECTIONID in $__SECTIONS; do
 		config_get __IFACE "$__SECTIONID" interface "wan"
-		[ -z "$__EVENTIF" -o "$__IFACE" = "$__EVENTIF" ] || continue
+		[ -z "$__EVENTIF" ] || [ "$__IFACE" = "$__EVENTIF" ] || continue
 		if [ $VERBOSE -eq 0 ]; then	# start in background
 			/usr/lib/ddns/dynamic_dns_updater.sh -v 0 -S "$__SECTIONID" -- start &
 		else
@@ -209,10 +209,10 @@ stop_section_processes() {
 	[ $# -ne 1 ] && write_log 12 "Error calling 'stop_section_processes()' - wrong number of parameters"
 
 	[ -e "$__PIDFILE" ] && {
-		__PID=$(cat $__PIDFILE)
+		__PID=$(cat "$__PIDFILE")
 		ps | grep "^[\t ]*$__PID" >/dev/null 2>&1 && kill $__PID || __PID=0	# terminate it
 	}
-	[ $__PID -eq 0 ] # report if process was running
+	[ "$__PID" -eq 0 ] # report if process was running
 }
 
 # stop updater script for all defines sections or only for one given
@@ -229,7 +229,7 @@ stop_daemon_for_all_ddns_sections() {
 	load_all_service_sections __SECTIONS
 	for __SECTIONID in $__SECTIONS;	do
 		config_get __IFACE "$__SECTIONID" interface "wan"
-		[ -z "$__EVENTIF" -o "$__IFACE" = "$__EVENTIF" ] || continue
+		[ -z "$__EVENTIF" ] || [ "$__IFACE" = "$__EVENTIF" ] || continue
 		stop_section_processes "$__SECTIONID"
 	done
 }
@@ -270,9 +270,9 @@ write_log() {
 	esac
 
 	# verbose echo
-	[ $VERBOSE -gt 0 -o $__EXIT -gt 0 ] && echo -e "$__MSG"
+	[ $VERBOSE -gt 0 ] || [ $__EXIT -gt 0 ] && echo -e "$__MSG"
 	# write to logfile
-	if [ ${use_logfile:-1} -eq 1 -o $VERBOSE -gt 1 ]; then
+	if [ ${use_logfile:-1} -eq 1 ] || [ $VERBOSE -gt 1 ]; then
 		if [ -n "$password" ]; then
 			# url encode __MSG, password already done
 			urlencode __MSE "$__MSG"
@@ -282,7 +282,7 @@ write_log() {
 				| sed -e "s/$URL_PASS/***PW***/g" \
 				| sed -e "s/+/ /g; s/%00/\n/g; s/%/\\\\x/g" | xargs -0 printf "%b" )
 		fi
-		printf "%s\n" "$__MSG" >> $LOGFILE
+		printf "%s\n" "$__MSG" >> "$LOGFILE"
 		# VERBOSE > 1 then NO loop so NO truncate log to $ddns_loglines lines
 		[ $VERBOSE -gt 1 ] || sed -i -e :a -e '$q;N;'$ddns_loglines',$D;ba' $LOGFILE
 	fi
@@ -538,12 +538,12 @@ verify_host_port() {
 			__RUNPROG="$NSLOOKUP $__HOST >$DATFILE 2>$ERRFILE"
 		fi
 		write_log 7 "#> $__RUNPROG"
-		eval $__RUNPROG
+		eval "$__RUNPROG"
 		__ERR=$?
 		# command error
 		[ $__ERR -gt 0 ] && {
 			write_log 3 "DNS Resolver Error - $__PROG Error '$__ERR'"
-			write_log 7 "$(cat $ERRFILE)"
+			write_log 7 "$(cat "$ERRFILE")"
 			return 2
 		}
 		# extract IP address
@@ -568,8 +568,8 @@ verify_host_port() {
 	# check IP version if forced
 	if [ $force_ipversion -ne 0 ]; then
 		__ERR=0
-		[ $use_ipv6 -eq 0 -a -z "$__IPV4" ] && __ERR=4
-		[ $use_ipv6 -eq 1 -a -z "$__IPV6" ] && __ERR=6
+		[ $use_ipv6 -eq 0 ] && [ -z "$__IPV4" ] && __ERR=4
+		[ $use_ipv6 -eq 1 ] && [ -z "$__IPV6" ] && __ERR=6
 		[ $__ERR -gt 0 ] && {
 			[ -n "$LUCI_HELPER" ] && return 4
 			write_log 14 "Verify host Error '4' - Forced IP Version IPv$__ERR don't match"
@@ -589,7 +589,7 @@ verify_host_port() {
 	# then nc will try to connect via IPv6 if there is any IPv6 available on any host interface
 	# not worrying, if there is an IPv6 wan address
 	# so if not "force_ipversion" to use_ipv6 then connect test via ipv4, if available
-	[ $force_ipversion -ne 0 -a $use_ipv6 -ne 0 -o -z "$__IPV4" ] && __IP=$__IPV6 || __IP=$__IPV4
+	[ $force_ipversion -ne 0 ] && [ $use_ipv6 -ne 0 ] || [ -z "$__IPV4" ] && __IP=$__IPV6 || __IP=$__IPV4
 
 	if [ -n "$__NCEXT" ]; then	# BusyBox nc compiled with extensions (timeout support)
 		__RUNPROG="$__NC -w 1 $__IP $__PORT </dev/null >$DATFILE 2>$ERRFILE"
@@ -626,13 +626,13 @@ verify_dns() {
 		__ERR=$?
 		if [ -n "$LUCI_HELPER" ]; then	# no retry if called by LuCI helper script
 			return $__ERR
-		elif [ $__ERR -ne 0 -a $VERBOSE -gt 1 ]; then	# VERBOSE > 1 then NO retry
+		elif [ $__ERR -ne 0 ] && [ $VERBOSE -gt 1 ]; then	# VERBOSE > 1 then NO retry
 			write_log 4 "Verify DNS server '$1' failed - Verbose Mode: $VERBOSE - NO retry on error"
 			return $__ERR
 		elif [ $__ERR -ne 0 ]; then
 			__CNT=$(( $__CNT + 1 ))	# increment error counter
 			# if error count > retry_max_count leave here
-			[ $retry_max_count -gt 0 -a $__CNT -gt $retry_max_count ] && \
+			[ $retry_max_count -gt 0 ] && [ $__CNT -gt $retry_max_count ] && \
 				write_log 14 "Verify DNS server '$1' failed after $retry_max_count retries"
 
 			write_log 4 "Verify DNS server '$1' failed - retry $__CNT/$retry_max_count in $RETRY_SECONDS seconds"
@@ -662,7 +662,7 @@ verify_proxy() {
 	write_log 7 "Verify Proxy server 'http://$1'"
 
 	# try to split user:password "@" host:port
-	__TMP=$(echo $1 | awk -F "@" '{print $2}')
+	__TMP=$(echo "$1" | awk -F "@" '{print $2}')
 	# no "@" found - only host:port is given
 	[ -z "$__TMP" ] && __TMP="$1"
 	# now lets check for IPv6 address
@@ -686,13 +686,13 @@ verify_proxy() {
 		__ERR=$?
 		if [ -n "$LUCI_HELPER" ]; then	# no retry if called by LuCI helper script
 			return $__ERR
-		elif [ $__ERR -gt 0 -a $VERBOSE -gt 1 ]; then	# VERBOSE > 1 then NO retry
+		elif [ $__ERR -gt 0 ] && [ $VERBOSE -gt 1 ]; then	# VERBOSE > 1 then NO retry
 			write_log 4 "Verify Proxy server '$1' failed - Verbose Mode: $VERBOSE - NO retry on error"
 			return $__ERR
 		elif [ $__ERR -gt 0 ]; then
 			__CNT=$(( $__CNT + 1 ))	# increment error counter
 			# if error count > retry_max_count leave here
-			[ $retry_max_count -gt 0 -a $__CNT -gt $retry_max_count ] && \
+			[ $retry_max_count -gt 0 ] && [ $__CNT -gt $retry_max_count ] && \
 				write_log 14 "Verify Proxy server '$1' failed after $retry_max_count retries"
 
 			write_log 4 "Verify Proxy server '$1' failed - retry $__CNT/$retry_max_count in $RETRY_SECONDS seconds"
@@ -764,7 +764,7 @@ do_transfer() {
 	elif [ -n "$CURL" ]; then
 		__PROG="$CURL -RsS -o $DATFILE --stderr $ERRFILE"
 		# check HTTPS support
-		[ -z "$CURL_SSL" -a $use_https -eq 1 ] && \
+		[ -z "$CURL_SSL" ] && [ $use_https -eq 1 ] && \
 			write_log 13 "cURL: libcurl compiled without https support"
 		# force network/interface-device to use for communication
 		if [ -n "$bind_network" ]; then
@@ -815,7 +815,7 @@ do_transfer() {
 			[ $use_ipv6 -eq 0 ] && __PROG="$__PROG -4" || __PROG="$__PROG -6"       # force IPv4/IPv6
 		fi
 		# https possibly not supported
-		[ $use_https -eq 1 -a -z "$UCLIENT_FETCH_SSL" ] && \
+		[ $use_https -eq 1 ] && [ -z "$UCLIENT_FETCH_SSL" ] && \
 			write_log 14 "uclient-fetch: no HTTPS support! Additional install one of ustream-ssl packages"
 		# proxy support
 		[ -z "$proxy" ] && __PROG="$__PROG -Y off" || __PROG="$__PROG -Y on"
@@ -856,7 +856,7 @@ do_transfer() {
 
 	while : ; do
 		write_log 7 "#> $__RUNPROG"
-		eval $__RUNPROG			# DO transfer
+		eval "$__RUNPROG"			# DO transfer
 		__ERR=$?			# save error code
 		[ $__ERR -eq 0 ] && return 0	# no error leave
 		[ -n "$LUCI_HELPER" ] && return 1	# no retry if called by LuCI helper script
@@ -872,7 +872,7 @@ do_transfer() {
 
 		__CNT=$(( $__CNT + 1 ))	# increment error counter
 		# if error count > retry_max_count leave here
-		[ $retry_max_count -gt 0 -a $__CNT -gt $retry_max_count ] && \
+		[ $retry_max_count -gt 0 ] && [ $__CNT -gt $retry_max_count ] && \
 			write_log 14 "Transfer failed after $retry_max_count retries"
 
 		write_log 4 "Transfer failed - retry $__CNT/$retry_max_count in $RETRY_SECONDS seconds"
@@ -918,7 +918,7 @@ send_update() {
 
 		do_transfer "$__URL" || return 1
 
-		write_log 7 "DDNS Provider answered:${N}$(cat $DATFILE)"
+		write_log 7 "DDNS Provider answered:${N}$(cat "$DATFILE")"
 
 		[ -z "$UPD_ANSWER" ] && return 0	# not set then ignore
 
@@ -936,7 +936,7 @@ get_current_ip () {
 	write_log 7 "Detect current IP on '$ip_source'"
 
 	while : ; do
-		if [ -n "$ip_network" -a "$ip_source" = "network" ]; then
+		if [ -n "$ip_network" ] && [ "$ip_source" = "network" ]; then
 			# set correct program
 			network_flush_cache	# force re-read data from ubus
 			[ $use_ipv6 -eq 0 ] && __RUNPROG="network_get_ipaddr" \
@@ -944,11 +944,11 @@ get_current_ip () {
 			eval "$__RUNPROG __DATA $ip_network" || \
 				write_log 13 "Can not detect current IP using $__RUNPROG '$ip_network' - Error: '$?'"
 			[ -n "$__DATA" ] && write_log 7 "Current IP '$__DATA' detected on network '$ip_network'"
-		elif [ -n "$ip_interface" -a "$ip_source" = "interface" ]; then
+		elif [ -n "$ip_interface" ] && [ "$ip_source" = "interface" ]; then
 			local __DATA4=""; local __DATA6=""
 			if [ -n "$(command -v ip)" ]; then		# ip program installed
 				write_log 7 "#> ip -o addr show dev $ip_interface scope global >$DATFILE 2>$ERRFILE"
-				ip -o addr show dev $ip_interface scope global >$DATFILE 2>$ERRFILE
+				ip -o addr show dev $ip_interface scope global >"$DATFILE" 2>"$ERRFILE"
 				__ERR=$?
 				if [ $__ERR -eq 0 ]; then
 					# DATFILE (sample)
@@ -964,8 +964,8 @@ get_current_ip () {
 
 					#    remove      remove     remove      replace     replace
 					#     link     inet6 fxxx    sec      forever=>-1   / => ' ' to separate subnet from ip
-					sed "/link/d; /inet6 f/d; s/sec//g; s/forever/-1/g; s/\// /g" $DATFILE | \
-						awk '{ print $3" "$4" "$NF }' > $ERRFILE	# temp reuse ERRFILE
+					sed "/link/d; /inet6 f/d; s/sec//g; s/forever/-1/g; s/\// /g" "$DATFILE" | \
+						awk '{ print $3" "$4" "$NF }' > "$ERRFILE"	# temp reuse ERRFILE
 					# we only need    inet?   IP  preferred time
 
 					local __TIME4=0;  local __TIME6=0
@@ -981,14 +981,14 @@ get_current_ip () {
 							__DATA4="$__ADR"
 							__TIME4="$__TIME"
 						}
-					done < $ERRFILE
+					done < "$ERRFILE"
 				else
 					write_log 3 "ip Error: '$__ERR'"
-					write_log 7 "$(cat $ERRFILE)"		# report error
+					write_log 7 "$(cat "$ERRFILE")"		# report error
 				fi
 			else					# use deprecated ifconfig
 				write_log 7 "#> ifconfig $ip_interface >$DATFILE 2>$ERRFILE"
-				ifconfig $ip_interface >$DATFILE 2>$ERRFILE
+				ifconfig $ip_interface >"$DATFILE" 2>"$ERRFILE"
 				__ERR=$?
 				if [ $__ERR -eq 0 ]; then
 					__DATA4=$(awk '
@@ -1003,7 +1003,7 @@ get_current_ip () {
 						FS=" ";		# set back separator to default " "
 						$0=$0;		# reread to activate separator (remove whitespaces)
 						print $1;	# print IPv4 addr
-						}' $DATFILE
+						}' "$DATFILE"
 					)
 					__DATA6=$(awk '
 						/inet6/ && /: [0-9a-eA-E]/ {	# Filter IPv6 exclude fxxx
@@ -1014,32 +1014,32 @@ get_current_ip () {
 						FS=" ";		# set back separator to default " "
 						$0=$0;		# reread to activate separator
 						print $3;	# print IPv6 addr
-						}' $DATFILE
+						}' "$DATFILE"
 					)
 				else
 					write_log 3 "ifconfig Error: '$__ERR'"
-					write_log 7 "$(cat $ERRFILE)"		# report error
+					write_log 7 "$(cat "$ERRFILE")"		# report error
 				fi
 			fi
 			[ $use_ipv6 -eq 0 ] && __DATA="$__DATA4" || __DATA="$__DATA6"
 			[ -n "$__DATA" ] && write_log 7 "Current IP '$__DATA' detected on interface '$ip_interface'"
 		elif [ -n "$ip_script" -a "$ip_source" = "script" ]; then
 			write_log 7 "#> $ip_script >$DATFILE 2>$ERRFILE"
-			eval $ip_script >$DATFILE 2>$ERRFILE
+			eval $ip_script >"$DATFILE" 2>"$ERRFILE"
 			__ERR=$?
 			if [ $__ERR -eq 0 ]; then
-				__DATA=$(cat $DATFILE)
+				__DATA=$(cat "$DATFILE")
 				[ -n "$__DATA" ] && write_log 7 "Current IP '$__DATA' detected via script '$ip_script'"
 			else
 				write_log 3 "$ip_script Error: '$__ERR'"
-				write_log 7 "$(cat $ERRFILE)"		# report error
+				write_log 7 "$(cat "$ERRFILE")"		# report error
 			fi
 		elif [ -n "$ip_url" -a "$ip_source" = "web" ]; then
 			do_transfer "$ip_url"
 			# use correct regular expression
 			[ $use_ipv6 -eq 0 ] \
-				&& __DATA=$(grep -m 1 -o "$IPV4_REGEX" $DATFILE) \
-				|| __DATA=$(grep -m 1 -o "$IPV6_REGEX" $DATFILE)
+				&& __DATA=$(grep -m 1 -o "$IPV4_REGEX" "$DATFILE") \
+				|| __DATA=$(grep -m 1 -o "$IPV6_REGEX" "$DATFILE")
 			[ -n "$__DATA" ] && write_log 7 "Current IP '$__DATA' detected on web at '$ip_url'"
 		else
 			write_log 12 "Error in 'get_current_ip()' - unhandled ip_source '$ip_source'"
@@ -1053,7 +1053,7 @@ get_current_ip () {
 		[ -n "$LUCI_HELPER" ] && return 1	# no retry if called by LuCI helper script
 
 		write_log 7 "Data detected:"
-		write_log 7 "$(cat $DATFILE)"
+		write_log 7 "$(cat "$DATFILE")"
 
 		[ $VERBOSE -gt 1 ] && {
 			# VERBOSE > 1 then NO retry
@@ -1063,7 +1063,7 @@ get_current_ip () {
 
 		__CNT=$(( $__CNT + 1 ))	# increment error counter
 		# if error count > retry_max_count leave here
-		[ $retry_max_count -gt 0 -a $__CNT -gt $retry_max_count ] && \
+		[ $retry_max_count -gt 0 ] && [ $__CNT -gt $retry_max_count ] && \
 			write_log 14 "Get current IP via '$ip_source' failed after $retry_max_count retries"
 		write_log 4 "Get current IP via '$ip_source' failed - retry $__CNT/$retry_max_count in $RETRY_SECONDS seconds"
 		sleep $RETRY_SECONDS &
@@ -1084,8 +1084,8 @@ get_registered_ip() {
 	# return codes
 	# 1	no IP detected
 
-	[ $# -lt 1 -o $# -gt 2 ] && write_log 12 "Error calling 'get_registered_ip()' - wrong number of parameters"
-	[ $is_glue -eq 1 -a -z "$BIND_HOST" ] && write_log 14 "Lookup of glue records is only supported using BIND host"
+	[ $# -lt 1 ] || [ $# -gt 2 ] && write_log 12 "Error calling 'get_registered_ip()' - wrong number of parameters"
+	[ $is_glue -eq 1 ] && [ -z "$BIND_HOST" ] && write_log 14 "Lookup of glue records is only supported using BIND host"
 	write_log 7 "Detect registered/public IP"
 
 	# set correct regular expression
@@ -1134,11 +1134,11 @@ get_registered_ip() {
 		[ -z "$__IP" ] && __IP=$(echo $dns_server | grep -m 1 -o "$IPV6_REGEX")
 
 		# we got NO ip for dns_server, so build command
-		[ -z "$__IP" -a -n "$dns_server" ] && {
+		[ -z "$__IP" ] && [ -n "$dns_server" ] && {
 			__IP="\`$HOSTIP"
-			[ $use_ipv6 -eq 1 -a $force_ipversion -eq 1 ] && __IP="$__IP -6"
+			[ $use_ipv6 -eq 1 ] && [ $force_ipversion -eq 1 ] && __IP="$__IP -6"
 			__IP="$__IP $dns_server | grep -m 1 -o"
-			[ $use_ipv6 -eq 1 -a $force_ipversion -eq 1 ] \
+			[ $use_ipv6 -eq 1 ] && [ $force_ipversion -eq 1 ] \
 				&& __IP="$__IP '$IPV6_REGEX'" \
 				|| __IP="$__IP '$IPV4_REGEX'"
 			__IP="$__IP \`"
@@ -1171,29 +1171,29 @@ get_registered_ip() {
 			write_log 3 "$__PROG error: '$__ERR'"
 			write_log 7 "$(cat $ERRFILE)"
 		else
-			if [ -n "$BIND_HOST" -o -n "$KNOT_HOST" ]; then
+			if [ -n "$BIND_HOST" ] || [ -n "$KNOT_HOST" ]; then
 				if [ $is_glue -eq 1 ]; then
 					__DATA=$(cat $DATFILE | grep "^$lookup_host" | grep -om1 "$__REGEX" )
 				else
 					__DATA=$(cat $DATFILE | awk -F "address " '/has/ {print $2; exit}' )
 				fi
 			elif [ -n "$DRILL" ]; then
-				__DATA=$(cat $DATFILE | awk '/^'"$lookup_host"'/ {print $5; exit}' )
+				__DATA=$(cat "$DATFILE" | awk '/^'"$lookup_host"'/ {print $5; exit}' )
 			elif [ -n "$HOSTIP" ]; then
-				__DATA=$(cat $DATFILE | grep -om1 "$__REGEX")
+				__DATA=$(cat "$DATFILE" | grep -om1 "$__REGEX")
 			elif [ -n "$NSLOOKUP" ]; then
-				__DATA=$(cat $DATFILE | sed -ne "/^Name:/,\$ { s/^Address[0-9 ]\{0,\}: \($__REGEX\).*$/\\1/p }" )
+				__DATA=$(cat "$DATFILE" | sed -ne "/^Name:/,\$ { s/^Address[0-9 ]\{0,\}: \($__REGEX\).*$/\\1/p }" )
 			fi
 			[ -n "$__DATA" ] && {
 				write_log 7 "Registered IP '$__DATA' detected"
-				[ -z "$IPFILE" ] || echo "$__DATA" > $IPFILE
+				[ -z "$IPFILE" ] || echo "$__DATA" > "$IPFILE"
 				eval "$1=\"$__DATA\""	# valid data found
 				return 0		# leave here
 			}
 			write_log 4 "NO valid IP found"
 			__ERR=127
 		fi
-		[ -z "$IPFILE" ] || echo "" > $IPFILE
+		[ -z "$IPFILE" ] || echo "" > "$IPFILE"
 
 		[ -n "$LUCI_HELPER" ] && return $__ERR	# no retry if called by LuCI helper script
 		[ -n "$2" ] && return $__ERR		# $2 is given -> no retry
@@ -1205,7 +1205,7 @@ get_registered_ip() {
 
 		__CNT=$(( $__CNT + 1 ))	# increment error counter
 		# if error count > retry_max_count leave here
-		[ $retry_max_count -gt 0 -a $__CNT -gt $retry_max_count ] && \
+		[ $retry_max_count -gt 0 ] && [ $__CNT -gt $retry_max_count ] && \
 			write_log 14 "Get registered/public IP for '$lookup_host' failed after $retry_max_count retries"
 
 		write_log 4 "Get registered/public IP for '$lookup_host' failed - retry $__CNT/$retry_max_count in $RETRY_SECONDS seconds"
@@ -1238,17 +1238,17 @@ trap_handler() {
 
 	case $1 in
 		 0)	if [ $__ERR -eq 0 ]; then
-				write_log 5 "PID '$$' exit normal at $(eval $DATE_PROG)${N}"
+				write_log 5 "PID '$$' exit normal at $(eval "$DATE_PROG")${N}"
 			else
-				write_log 4 "PID '$$' exit WITH ERROR '$__ERR' at $(eval $DATE_PROG)${N}"
+				write_log 4 "PID '$$' exit WITH ERROR '$__ERR' at $(eval "$DATE_PROG")${N}"
 			fi ;;
-		 1)	write_log 6 "PID '$$' received 'SIGHUP' at $(eval $DATE_PROG)"
+		 1)	write_log 6 "PID '$$' received 'SIGHUP' at $(eval "$DATE_PROG")"
 			# reload config via starting the script again
 			/usr/lib/ddns/dynamic_dns_updater.sh -v "0" -S "$__SECTIONID" -- start || true
 			exit 0 ;;	# and leave this one
-		 2)	write_log 5 "PID '$$' terminated by 'SIGINT' at $(eval $DATE_PROG)${N}";;
-		 3)	write_log 5 "PID '$$' terminated by 'SIGQUIT' at $(eval $DATE_PROG)${N}";;
-		15)	write_log 5 "PID '$$' terminated by 'SIGTERM' at $(eval $DATE_PROG)${N}";;
+		 2)	write_log 5 "PID '$$' terminated by 'SIGINT' at $(eval "$DATE_PROG")${N}";;
+		 3)	write_log 5 "PID '$$' terminated by 'SIGQUIT' at $(eval "$DATE_PROG")${N}";;
+		15)	write_log 5 "PID '$$' terminated by 'SIGTERM' at $(eval "$DATE_PROG")${N}";;
 		 *)	write_log 13 "Unhandled signal '$1' in 'trap_handler()'";;
 	esac
 
@@ -1260,8 +1260,8 @@ trap_handler() {
 	IFS=$__OLD_IFS
 
 	# remove out and err file
-	[ -f $DATFILE ] && rm -f $DATFILE
-	[ -f $ERRFILE ] && rm -f $ERRFILE
+	[ -f "$DATFILE" ] && rm -f "$DATFILE"
+	[ -f "$ERRFILE" ] && rm -f "$ERRFILE"
 
 	# exit with correct handling:
 	# remove trap handling settings and send kill to myself
@@ -1395,7 +1395,7 @@ expand_ipv6() {
 	fi
 
 	# an expanded address has 39 chars + CR
-	if [ $(echo $INPUT | wc -m) != 40 ]; then
+	if [ "$(echo "$INPUT" | wc -m)" != 40 ]; then
 		write_log 4 "Error in 'expand_ipv6()' - invalid IPv6 found: '$1' expanded: '$INPUT'"
 		eval "$2='invalid'"
 		return 1
