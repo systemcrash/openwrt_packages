@@ -97,9 +97,9 @@ esac
 
 # set file names
 PIDFILE="$ddns_rundir/$SECTION_ID.pid"	# Process ID file
-UPDFILE="$ddns_rundir/$SECTION_ID.update"	# last update successful send (system uptime)
-DATFILE="$ddns_rundir/$SECTION_ID.dat"	# save stdout data of WGet and other extern programs called
-ERRFILE="$ddns_rundir/$SECTION_ID.err"	# save stderr output of WGet and other extern programs called
+UPDFILE="$ddns_rundir/$SECTION_ID.update"	# last update successfully sent (system uptime)
+DATFILE="$ddns_rundir/$SECTION_ID.dat"	# save stdout data of WGet and other external programs called
+ERRFILE="$ddns_rundir/$SECTION_ID.err"	# save stderr output of WGet and other external programs called
 IPFILE="$ddns_rundir/$SECTION_ID.ip"	#
 LOGFILE="$ddns_logdir/$SECTION_ID.log"	# log file
 
@@ -135,7 +135,7 @@ trap "trap_handler 15" 15	# SIGTERM	Termination
 # update_script SCRIPT to use to update your "custom" DDNS service
 #
 # lookup_host	FQDN of ONE of your at DDNS service defined host / required to validate if IP update happen/necessary
-# domain 	Nomally your DDNS hostname / replace [DOMAIN] in update_url
+# domain 	Normally your DDNS hostname / replace [DOMAIN] in update_url
 # username 	Username of your DDNS service account / urlenceded and replace [USERNAME] in update_url
 # password 	Password of your DDNS service account / urlencoded and replace [PASSWORD] in update_url
 # param_enc	Optional parameter for (later) usage  / urlencoded and replace [PARAMENC] in update_url
@@ -164,7 +164,7 @@ trap "trap_handler 15" 15	# SIGTERM	Termination
 #
 # use_ipv6		detecting/sending IPv6 address
 # force_ipversion	force usage of IPv4 or IPv6 for the whole detection and update communication
-# dns_server		using a non default dns server to get Registered IP from Internet
+# dns_server		using a non default DNS server to get Registered IP from Internet
 # force_dnstcp		force communication with DNS server via TCP instead of default UDP
 # proxy			using a proxy for communication !!! ALSO used to detect current IP via web => return proxy's IP !!!
 # use_logfile		self-explanatory "/var/log/ddns/$SECTION_ID.log"
@@ -203,7 +203,7 @@ ERR_LAST=$?	# save return code - equal 0 if SECTION_ID found
 [ -n "$password" ] && urlencode URL_PASS "$password"
 [ -n "$param_enc" ] && urlencode URL_PENC "$param_enc"
 
-# SECTION_ID does not exists
+# SECTION_ID non-existent
 [ $ERR_LAST -ne 0 ] && {
 	[ $VERBOSE -le 1 ] && VERBOSE=2		# force console out and logfile output
 	[ -f $LOGFILE ] && rm -f $LOGFILE	# clear logfile before first entry
@@ -230,8 +230,8 @@ esac
 # check enabled state otherwise we don't need to continue
 [ $enabled -eq 0 ] && write_log 14 "Service section disabled!"
 
-# determine what update url we're using if a service_name is supplied
-# otherwise update_url is set inside configuration (custom update url)
+# determine what update URL we're using if a service_name is supplied
+# otherwise update_url is set inside configuration (custom update URL)
 # or update_script is set inside configuration (custom update script)
 [ -n "$service_name" ] && {
 	# Check first if we have a custom service provider with this name
@@ -303,7 +303,7 @@ echo $$ > $PIDFILE
 
 # determine when the last update was
 # the following lines should prevent multiple updates if hotplug fires multiple startups
-# as described in Ticket #7820, but did not function if never an update take place
+# as described in Ticket #7820, but did not function if an update never took place
 # i.e. after a reboot (/var is linked to /tmp)
 # using uptime as reference because date might not be updated via NTP client
 get_uptime CURR_TIME
@@ -338,10 +338,10 @@ get_registered_ip REGISTERED_IP "NO_RETRY"
 ERR_LAST=$?
 #     No error    or     No IP set	 otherwise retry
 [ $ERR_LAST -eq 0 -o $ERR_LAST -eq 127 ] || get_registered_ip REGISTERED_IP
-# on IPv6 we use expanded version to be shure when comparing
+# on IPv6 we use expanded version to be sure when comparing
 [ $use_ipv6 -eq 1 ] && expand_ipv6 "$REGISTERED_IP" REGISTERED_IP
 
-# loop endlessly, checking ip every check_interval and forcing an updating once every force_interval
+# loop endlessly, checking IP every check_interval and forcing an updating once every force_interval
 write_log 6 "Starting main loop at $(eval $DATE_PROG)"
 while : ; do
 
@@ -356,7 +356,7 @@ while : ; do
 
 	get_uptime CURR_TIME		# get current uptime
 
-	# send update when current time > next time or current ip different from registered ip
+	# send update when current time > next time or current IP different from registered IP
 	if [ $CURR_TIME -ge $NEXT_TIME -o "$CURRENT_IP" != "$REGISTERED_IP" ]; then
 		if [ $DRY_RUN -ge 1 ]; then
 			write_log 7 "Dry Run: NO UPDATE send"
@@ -376,10 +376,10 @@ while : ; do
 		# we have no communication error (handled inside send_update/do_transfer)
 		# but update was not recognized
 		# do NOT retry after RETRY_SECONDS, do retry after CHECK_SECONDS
-		# to early retrys will block most DDNS provider
+		# DDNS providers may block too (many) early retries  
 		# providers answer is checked inside send_update() function
 		if [ $ERR_LAST -eq 0 ]; then
-			get_uptime LAST_TIME		# we send update, so
+			get_uptime LAST_TIME		# we sent update, so
 			echo $LAST_TIME > $UPDFILE	# save LASTTIME to file
 			[ "$CURRENT_IP" != "$REGISTERED_IP" ] \
 				&& write_log 6 "Update successful - IP '$CURRENT_IP' send" \
@@ -404,7 +404,7 @@ while : ; do
 	get_registered_ip REGISTERED_IP	# get registered/public IP
 	[ $use_ipv6 -eq 1 ] && expand_ipv6 "$REGISTERED_IP" REGISTERED_IP	# on IPv6 we use expanded version
 
-	# IP's are still different
+	# IPs differ
 	if [ "$CURRENT_IP" != "$REGISTERED_IP" ]; then
 		if [ $VERBOSE -le 1 ]; then	# VERBOSE <=1 then retry
 			RETRY_COUNT=$(( $RETRY_COUNT + 1 ))
@@ -417,7 +417,7 @@ while : ; do
 			write_log 7 "Verbose Mode: $VERBOSE - NO retry"; exit 1
 		fi
 	else
-		# we checked successful the last update
+		# we checked successfully the last update
 		RETRY_COUNT=0			# reset error counter
 	fi
 

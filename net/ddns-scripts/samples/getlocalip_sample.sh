@@ -12,7 +12,7 @@
 # of /usr/lib/ddns/dynamic_dns_functions.sh
 #
 # useful when this box is the only DDNS client in the network
-# IP adresses of "internal" boxes could be detected with this script
+# IP addresses of "internal" boxes could be detected with this script
 # so no need to install ddns client on every "internal" box
 # On IPv6 every internal box normally has it's own external IP
 #
@@ -22,7 +22,7 @@
 #	- return an error code ('0' for success)	exit 123
 
 case $1 in
-	-4)	echo -n "8.8.8.8"		# never append linefeed or simular
+	-4)	echo -n "8.8.8.8"		# never append linefeed or similar
 		exit 0
 		;;				# IP's of Googles public DNS
 	-6)	echo -n "2001:4860:4860::8888"

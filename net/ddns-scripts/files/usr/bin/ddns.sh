@@ -54,7 +54,7 @@ action_update() {
 			"$url" \
 			-O "${DDNS_PACKAGE_DIR}/list"
 	elif [ -n "$cacert" ]; then
-		echo "Certification file not found ($cacert)"
+		echo "Certificates file not found ($cacert)"
 		exit 5
 	fi
 }
@@ -104,7 +104,7 @@ action_install() {
 			"${url}" \
 			-O "${DDNS_PACKAGE_DIR}/custom/${service}.json"
 	elif [ -n "$cacert" ]; then
-		echo "Certification file not found ($cacert)"
+		echo "Certificates file not found ($cacert)"
 		exit 5
 	fi
 }

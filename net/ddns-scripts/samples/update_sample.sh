@@ -10,7 +10,7 @@
 # so you can use all available functions and global variables inside this script
 # already defined in dynamic_dns_updater.sh and dynamic_dns_functions.sh
 #
-# It make sence to define the update url ONLY inside this script
+# It makes sense to define the update URL ONLY inside this script
 # because it's anyway unique to the update script
 # otherwise it should work with the default scripts
 #
@@ -18,7 +18,7 @@
 #
 # tested with spdns.de
 local __URL="http://[USERNAME]:[PASSWORD]@update.spdns.de/nic/update?hostname=[DOMAIN]&myip=[IP]"
-# inside url we need domain, username and password
+# inside URL we need domain, username and password
 [ -z "$domain" ]   && write_log 14 "Service section not configured correctly! Missing 'domain'"
 [ -z "$username" ] && write_log 14 "Service section not configured correctly! Missing 'username'"
 [ -z "$password" ] && write_log 14 "Service section not configured correctly! Missing 'password'"
@@ -33,7 +33,7 @@ do_transfer "$__URL" || return 1
 
 write_log 7 "DDNS Provider answered:\n$(cat $DATFILE)"
 
-# analyse provider answers
+# analyze provider answers
 # "good [IP_ADR]"	= successful
 # "nochg [IP_ADR]"	= no change but OK
 grep -i -E "good|nochg" $DATFILE >/dev/null 2>&1

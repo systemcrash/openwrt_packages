@@ -88,13 +88,13 @@ config service "myddns"
 	###########
 	# Next you need to specify the name of the service you are
 	# connecting to "eg. dyndns.org".  The format of the update
-	# urls for several different dynamic dns services is specified
+	# URLs for several different dynamic DNS services is specified
 	# in the "/usr/lib/ddns/services" file for IPv4 and in
 	# "/usr/lib/ddns/service_ipv6" file. This list is hardly complete
-	# as there are many, many different dynamic dns services.
+	# as there are many, many different dynamic DNS services.
 	# If your service is on the list you can merely specify it with the
 	# "service_name" option.  Otherwise you will need to determine
-	# the format of the url to update with.  You can either add an
+	# the format of the URL to update with.  You can either add an
 	# entry to the "/usr/lib/ddns/services" or "services_ipv6" file
 	# or specify this with the "update_url" option.
 	# If your ddns provider doesn't work with ddns-scripts because
@@ -130,18 +130,18 @@ config service "myddns"
 	# default: none
 	option username ""
 
-	# Password of your DDNS service account / replace [PASSWORD] in update url
+	# Password of your DDNS service account / replace [PASSWORD] in update URL
 	# default: none
 	option password ""
 
 	###########
 	# Optional parameters for use inside update_url
 	#
-	# parameter that will be urlencoded before replacement of [PARAMENC] inside update url
+	# parameter that will be urlencoded before replacement of [PARAMENC] inside update URL
 	# default: none
 	option param_enc ""
 
-	# parameter that repace [PARAMOPT] inside update url
+	# parameter that replaces [PARAMOPT] inside update URL
 	# default: none
 	option param_opt ""
 
@@ -213,10 +213,10 @@ config service "myddns"
 #	option ip_source    "interface"
 #	option ip_interface "eth1"
 
-	# ip_source "script" additional uses option ip_script
-	# it's useful if you want to write your own script to detect the
-	# current local ip. put full path into ip_script option.
-	# The script must be executable.
+	# ip_source "script" additionally uses the option ip_script
+	# It's useful if you want to write your own script to detect the
+	# current local IP. Put the full path into ip_script option.
+	# The script file must have the executable flag. (chmod +x)
 	# default: none
 #	option ip_source "script"
 #	option ip_script ""
@@ -236,17 +236,17 @@ config service "myddns"
 	option force_ipversion "0"
 
 	###########
-	# Normally the current (in the internet) registered ip is detected using the
+	# Normally the current (in the internet) registered IP is detected using the
 	# local defined name lookup policies (i.e. /etc/resolve.conf etc.)
 	# Specify here a DNS server to use instead of the defaults.
-	# you can use hostname or ip address
+	# you can use hostname or IP address
 	# i.e. "google-public-dns-a.google.com"
 	# default: none
 #	option dns_server "google-public-dns-a.google.com"
 
-	# By default every DNS call is made via UDP protocol
-	# Some internet provider offer modems that cache UDP DNS requests.
-	# They also redirect calls to external servers to local.
+	# By default every DNS call is made via the UDP protocol.
+	# Some internet providers offer MODEMs that cache UDP DNS requests.
+	# They also redirect calls intended for external servers to local.
 	# To force the usage of TCP for DNS requests enable this option
 	# Needs BIND's host program be installed
 	# default: "0" disabled
@@ -284,7 +284,7 @@ config service "myddns"
 	# wait this time before verify if update was successful send.
 	# !!! checks below 5 minutes make no sense because the Internet
 	# needs about 5-10 minutes to sync an IP-change to all DNS servers !!!
-	# accepted unit entry’s: 'seconds' 'minutes' 'hours'
+	# accepted unit entries: 'seconds' 'minutes' 'hours'
 	# minimum 5 minutes == 300 seconds
 	# default 10 minutes
 	option check_interval	'10'
@@ -293,7 +293,7 @@ config service "myddns"
 	###########
 	# force to send an update to service provider, if no change was detected.
 	# consult DDNS providers documentation if your DDNS entry might timeout.
-	# accepted unit entry’s: 'minutes' 'hours' 'days'
+	# accepted unit entries: 'minutes' 'hours' 'days'
 	# minimum needs to be greater or equal check interval (see above)
 	# A special setting of '0' is allowed, which forces the script to run once.
 	# It sends an update, verify if update was accepted by DNS
@@ -313,7 +313,7 @@ config service "myddns"
 	# if error happen on detecting, sending or updating the
 	# script will retry the relevant action.
 	# here you define the time to wait before retry is started
-	# accepted unit entry’s: 'seconds' 'minutes'
+	# accepted unit entries: 'seconds' 'minutes'
 	# default: 60 seconds
 	option retry_interval	'60'
 	option retry_unit	'seconds'

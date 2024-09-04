@@ -5,7 +5,7 @@
 # Original written by Eric Paul Bishop, January 2008
 # (Loosely) based on the script on the one posted by exobyte in the forums here:
 # http://forum.openwrt.org/viewtopic.php?id=14040
-# extended and partial rewritten
+# extended and partially rewritten
 #.2014-2018 Christian Schoenebeck <christian dot schoenebeck at gmail dot com>
 #
 # function timeout
@@ -77,7 +77,7 @@ DNS_CHARSET="[@a-zA-Z0-9._-]"
 # domains can have * for wildcard. "-" must be the last character
 DNS_CHARSET_DOMAIN="[@a-zA-Z0-9._*-]"
 
-# detect if called by ddns-lucihelper.sh script, disable retrys (empty variable == false)
+# detect if called by ddns-lucihelper.sh script, disable retries (empty variable == false)
 LUCI_HELPER=$(printf %s "$MYPROG" | grep -i "luci")
 
 # Name Server Lookup Programs
@@ -100,7 +100,7 @@ CURL_PROXY=$(find /lib /usr/lib -name libcurl.so* -exec strings {} 2>/dev/null \
 UCLIENT_FETCH=$(command -v uclient-fetch)
 
 # Global configuration settings
-# allow NON-public IP's
+# allow NON-public IPs
 upd_privateip=$(uci -q get ddns.global.upd_privateip) || upd_privateip=0
 
 # directory to store run information to.
@@ -201,7 +201,7 @@ start_daemon_for_all_ddns_sections()
 	done
 }
 
-# stop sections process incl. childs (sleeps)
+# stop sections process incl. children (sleeps)
 # $1 = section
 stop_section_processes() {
 	local __PID=0
@@ -892,7 +892,7 @@ send_update() {
 	[ $# -ne 1 ] && write_log 12 "Error calling 'send_update()' - wrong number of parameters"
 
 	if [ $upd_privateip -eq 0 ]; then
-		# verify given IP / no private IPv4's / no IPv6 addr starting with fxxx of with ":"
+		# verify given IP: no private RFC1918 IPv4 / no IPv6 addr starting fxxx/8 or ":"
 		[ $use_ipv6 -eq 0 ] && __IP=$(echo $1 | grep -v -E "(^0|^10\.|^100\.6[4-9]\.|^100\.[7-9][0-9]\.|^100\.1[0-1][0-9]\.|^100\.12[0-7]\.|^127|^169\.254|^172\.1[6-9]\.|^172\.2[0-9]\.|^172\.3[0-1]\.|^192\.168)")
 		[ $use_ipv6 -eq 1 ] && __IP=$(echo $1 | grep "^[0-9a-eA-E]")
 	else
@@ -966,12 +966,12 @@ get_current_ip () {
 					#     link     inet6 fxxx    sec      forever=>-1   / => ' ' to separate subnet from ip
 					sed "/link/d; /inet6 f/d; s/sec//g; s/forever/-1/g; s/\// /g" $DATFILE | \
 						awk '{ print $3" "$4" "$NF }' > $ERRFILE	# temp reuse ERRFILE
-					# we only need    inet?   IP  prefered time
+					# we only need    inet?   IP  preferred time
 
 					local __TIME4=0;  local __TIME6=0
 					local __TYP __ADR __TIME
 					while read __TYP __ADR __TIME; do
-						__TIME=${__TIME:-0}	# supress shell errors on last (empty) line of DATFILE
+						__TIME=${__TIME:-0}	# suppress shell errors on last (empty) line of DATFILE
 						#    IPversion       no "-1" record stored - now "-1" record or new time > oldtime
 						[ "$__TYP" = "inet6" -a $__TIME6 -ge 0 -a \( $__TIME -lt 0 -o $__TIME -gt $__TIME6 \) ] && {
 							__DATA6="$__ADR"
@@ -1071,7 +1071,7 @@ get_current_ip () {
 		wait $PID_SLEEP	# enable trap-handler
 		PID_SLEEP=0
 	done
-	# we should never come here there must be a programming error
+	# we should never reach here; there must be a programming error
 	write_log 12 "Error in 'get_current_ip()' - program coding error"
 }
 
@@ -1252,7 +1252,7 @@ trap_handler() {
 		 *)	write_log 13 "Unhandled signal '$1' in 'trap_handler()'";;
 	esac
 
-	__PIDS=$(pgrep -P $$)	# get my childs (pgrep prints with "newline")
+	__PIDS=$(pgrep -P $$)	# get my children (pgrep prints with "newline")
 	IFS=$__NEWLINE_IFS
 	for __PID in $__PIDS; do
 		kill -$1 $__PID	# terminate it
