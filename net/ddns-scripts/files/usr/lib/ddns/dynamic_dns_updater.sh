@@ -298,7 +298,7 @@ write_log 7 "retry max count : $retry_max_count times"
 
 # kill old process if it exists & set new pid file
 stop_section_processes "$SECTION_ID"
-[ $? -gt 0 ] && write_log 7 "'SIGTERM' was send to old process" || write_log 7 "No old process"
+[ $? -gt 0 ] && write_log 7 "'SIGTERM' was sent to old process" || write_log 7 "No old process"
 echo $$ > $PIDFILE
 
 # determine when the last update was
@@ -359,7 +359,7 @@ while : ; do
 	# send update when current time > next time or current IP different from registered IP
 	if [ $CURR_TIME -ge $NEXT_TIME -o "$CURRENT_IP" != "$REGISTERED_IP" ]; then
 		if [ $DRY_RUN -ge 1 ]; then
-			write_log 7 "Dry Run: NO UPDATE send"
+			write_log 7 "Dry Run: NO UPDATE sent"
 		elif [ "$CURRENT_IP" != "$REGISTERED_IP" ]; then
 			write_log 7 "Update needed - L: '$CURRENT_IP' <> R: '$REGISTERED_IP'"
 		else
@@ -382,10 +382,10 @@ while : ; do
 			get_uptime LAST_TIME		# we sent update, so
 			echo $LAST_TIME > $UPDFILE	# save LASTTIME to file
 			[ "$CURRENT_IP" != "$REGISTERED_IP" ] \
-				&& write_log 6 "Update successful - IP '$CURRENT_IP' send" \
-				|| write_log 6 "Forced update successful - IP: '$CURRENT_IP' send"
+				&& write_log 6 "Update successful - IP '$CURRENT_IP' sent" \
+				|| write_log 6 "Forced update successful - IP: '$CURRENT_IP' sent"
 		elif [ $ERR_LAST -eq 127 ]; then
-			write_log 3 "No update send to DDNS Provider"
+			write_log 3 "No update sent to DDNS Provider"
 		else
 			write_log 3 "IP update not accepted by DDNS Provider"
 		fi
